@@ -85,14 +85,3 @@ Para datasets não-lineares (como o circular ou em formato de luas), usamos fun�
 *   **Linear:** $K(x_1, x_2) = x_1 \cdot x_2$
 *   **Polinomial:** $K(x_1, x_2) = (x_1 \cdot x_2 + 1)^d$
 *   **RBF (Gaussiano):** $K(x_1, x_2) = \exp\left(-\frac{\|x_1 - x_2\|^2}{2\sigma^2}\right)$
-
----
-
-## 🎯 Próximos Passos (Seu Aprendizado)
-
-Abra o arquivo `src/svm.py` e tente implementar:
-1. As funções de **Kernel** em `_kernel()`.
-2. A atualização dos pesos no loop em `fit()`.
-3. O cálculo da predição em `predict()`.
-
-Depois, você pode alterar o `dataset_type` em `main.py` para `'circular'` ou `'moons'` e testar os kernels correspondentes para ver as fronteiras de decisão se adaptando!
