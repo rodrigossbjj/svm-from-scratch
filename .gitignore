@@ -17,3 +17,6 @@ __pycache__/
 
 # Notebooks checkpoints
 .ipynb_checkpoints/
+
+# Generated images
+*.png

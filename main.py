@@ -3,49 +3,102 @@ from src.data_generator import generate_linearly_separable, generate_circular_da
 from src.svm import SVM
 from src.utils import plot_decision_boundary, calculate_accuracy
 
-def main():
-    print("=== Support Vector Machine (SVM) from Scratch ===")
+def run_experiment(dataset_type, kernel_type, lambda_param=0.01, sigma=1.0, degree=3, n_iters=1000):
+    """
+    Executa um pipeline de ponta a ponta (Geração de dados, Treinamento, Predição e Plotagem)
+    para uma configuração específica de dataset e kernel.
+    """
+    print(f"\n--- Iniciando Experimento: Dataset '{dataset_type.upper()}' com Kernel '{kernel_type.upper()}' ---")
     
-    # 1. Choose and generate a synthetic dataset
-    # options: 'linear', 'circular', 'moons'
-    dataset_type = 'linear'
-    print(f"\n[1] Generating synthetic dataset of type: '{dataset_type}'...")
-    
+    # 1. Geração do Dataset Sintético apropriado
     if dataset_type == 'linear':
-        X, y = generate_linearly_separable(n_samples=100, noise=0.15)
+        X, y = generate_linearly_separable(n_samples=150, noise=0.12, random_state=42)
     elif dataset_type == 'circular':
-        X, y = generate_circular_dataset(n_samples=150, noise=0.08)
+        X, y = generate_circular_dataset(n_samples=200, noise=0.06, factor=0.5, random_state=42)
+    elif dataset_type == 'moons':
+        X, y = generate_moons_dataset(n_samples=200, noise=0.08, random_state=42)
     else:
-        X, y = generate_moons_dataset(n_samples=150, noise=0.1)
+        raise ValueError(f"Dataset inválido: {dataset_type}")
         
-    print(f"Dataset shape: Features = {X.shape}, Labels = {y.shape}")
-    print(f"Classes distribution: {np.sum(y == 1)} of class +1, {np.sum(y == -1)} of class -1")
+    print(f"[1] Dataset gerado com sucesso!")
+    print(f"    - Amostras: {X.shape[0]}, Características: {X.shape[1]}")
+    print(f"    - Distribuição: {np.sum(y == 1)} na classe +1 | {np.sum(y == -1)} na classe -1")
 
-    # 2. Instantiate the SVM model
-    print("\n[2] Initializing SVM classifier...")
-    # Adjust parameters (learning rate, lambda, iterations, kernel, etc.)
-    model = SVM(learning_rate=0.001, lambda_param=0.01, n_iters=1000, kernel='linear')
+    # 2. Inicialização do Classificador SVM do zero
+    # O C interno é inversamente proporcional ao lambda_param (C = 1 / lambda)
+    print(f"[2] Inicializando classificador SVM...")
+    model = SVM(
+        learning_rate=0.01, 
+        lambda_param=lambda_param, 
+        n_iters=n_iters, 
+        kernel=kernel_type, 
+        sigma=sigma, 
+        degree=degree
+    )
 
-    # 3. Train the model
-    print("\n[3] Training model...")
+    # 3. Treinamento do Modelo SVM via algoritmo SMO Simplificado
+    print(f"[3] Treinando o SVM usando SMO Simplificado (máx {n_iters} épocas)...")
     model.fit(X, y)
     
-    # 4. Predict and evaluate
-    print("\n[4] Making predictions...")
+    # 4. Avaliação e Métricas de Predição
+    print(f"[4] Computando predições e acurácia...")
     predictions = model.predict(X)
-    
     acc = calculate_accuracy(y, predictions)
-    print(f"Training Accuracy: {acc:.2f}%")
+    
+    # Conta quantos vetores de suporte foram retidos (onde alphas > 0)
+    n_support_vectors = len(model.support_vector_alphas) if model.support_vector_alphas is not None else 0
+    print(f"    -> Acurácia obtida no treino: {acc:.2f}%")
+    print(f"    -> Quantidade de Vetores de Suporte: {n_support_vectors} (de {X.shape[0]} amostras)")
 
-    # 5. Visualize decision boundary
-    print("\n[5] Visualizing decision boundary...")
-    # Define a custom decision_function for drawing the contours in utils.plot_decision_boundary
-    # Add a temporary method to our model instance for demonstration if not implemented
-    if not hasattr(model, 'decision_function'):
-        # For a standard linear SVM, decision function is w . x - b
-        model.decision_function = lambda x: np.dot(x, model.w) - model.b
-        
-    plot_decision_boundary(model, X, y, title=f"SVM Decision Boundary ({dataset_type.capitalize()} Dataset)")
+    # 5. Visualização gráfica e salvamento do arquivo de imagem resultante
+    filename = f"{dataset_type}_decision_boundary.png"
+    print(f"[5] Desenhando a fronteira de decisão e salvando o gráfico...")
+    title_str = f"SVM com Kernel {kernel_type.capitalize()} ({dataset_type.capitalize()} Dataset)"
+    plot_decision_boundary(model, X, y, title=title_str, save_path=filename)
+    
+    return acc
+
+def main():
+    print("==========================================================")
+    # Título do script principal rodando no terminal
+    print("=== Máquina de Vetores de Suporte (SVM) do Zero em Python ===")
+    print("==========================================================")
+    
+    # Executaremos 3 experimentos clássicos para validar nosso modelo SVM do zero:
+    
+    # Caso 1: Separação Linear Simples (Linear Kernel)
+    # Dados linearmente separáveis são perfeitamente resolvidos pelo kernel linear tradicional.
+    run_experiment(
+        dataset_type='linear', 
+        kernel_type='linear', 
+        lambda_param=0.01, 
+        n_iters=1000
+    )
+    
+    # Caso 2: Separação Circular Não-Linear (RBF Kernel)
+    # Círculos concêntricos não são linearmente separáveis no plano 2D, mas são com o Kernel Gaussiano (RBF).
+    run_experiment(
+        dataset_type='circular', 
+        kernel_type='rbf', 
+        lambda_param=0.01, 
+        sigma=0.5, 
+        n_iters=1500
+    )
+    
+    # Caso 3: Separação em Formato de Luas Intercaladas (RBF Kernel)
+    # O clássico dataset de duas "meias-luas" requer uma fronteira de decisão curva, resolvida por RBF.
+    run_experiment(
+        dataset_type='moons', 
+        kernel_type='rbf', 
+        lambda_param=0.01, 
+        sigma=0.5, 
+        n_iters=1500
+    )
+    
+    print("\n==========================================================")
+    print("=== Todos os experimentos foram concluídos com sucesso! ===")
+    print("Os gráficos foram gravados no diretório atual.")
+    print("==========================================================")
 
 if __name__ == "__main__":
     main()
