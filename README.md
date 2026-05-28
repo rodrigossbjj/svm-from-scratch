@@ -1,6 +1,6 @@
 # SVM do Zero (SVM from Scratch)
 
-Este repositório contém a estrutura inicial para a implementação de um classificador **Support Vector Machine (SVM)** do zero em Python, utilizando conjuntos de dados (datasets) sintéticos para reconhecimento de padrões.
+Este repositório contém a implementação completa de um classificador **Support Vector Machine (SVM)** do zero em Python, utilizando conjuntos de dados (datasets) sintéticos para reconhecimento de padrões.
 
 ## 📂 Estrutura do Projeto
 
@@ -9,7 +9,7 @@ svm-from-scratch/
 │
 ├── src/
 │   ├── __init__.py          # Define o diretório como pacote Python
-│   ├── svm.py               # Esqueleto da implementação do SVM (Matemática e Ajuste)
+│   ├── svm.py               # Implementação do SVM (Matemática, Ajuste e Kernels)
 │   ├── data_generator.py    # Gerador de dados sintéticos (Linear, Circular, Moons)
 │   └── utils.py             # Funções de suporte (visualização gráfica das margens e acurácia)
 │
